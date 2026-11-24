@@ -5,15 +5,20 @@ import { canReveal, revealRang } from './rang';
 import { legalCards, leadSuit, playCard } from './tricks';
 import { Game, SUITS } from './types';
 
-// Bots bid when they have strong cards (J, Q, K, A) in their first 5.
+// Bots follow the tip from the rules: bid 8 with at least two high cards (J, Q, K, A) in one suit
+// among the first 5 cards. Each extra high card (from the 4th on) raises the bid by one.
 export function botBid(game: Game) {
   const hand = firstFive(game.hands[game.turn]);
   let strong = 0;
-  for (const card of hand) {
-    if (card.rank >= 11) strong++;
+  let twoInOneSuit = false;
+  for (const suit of SUITS) {
+    const count = hand.filter((c) => c.suit === suit && c.rank >= 11).length;
+    strong += count;
+    if (count >= 2) twoInOneSuit = true;
   }
-  const want = 8 + (strong - 3);
-  if (strong >= 3 && want > highestBid(game)) return want;
+  if (!twoInOneSuit) return 0;
+  const want = strong >= 4 ? 8 + (strong - 3) : 8;
+  if (want > highestBid(game)) return want;
   return 0;
 }
 
