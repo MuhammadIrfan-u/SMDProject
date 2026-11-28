@@ -27,6 +27,7 @@ The rules come from the project [README](../README.md), which is based on [SuitS
 | 10 | [Computer players (bots)](10-bots.md) | `bots.ts` |
 | 11 | [Game loop and UI wiring](11-game-loop-ui.md) | `GameScreen.tsx` |
 | 12 | [Verification: rule-by-rule check](12-verification.md) | all |
+| 13 | [Player name and game history (Firebase)](13-player-history.md) | `firebase/players.ts` |
 
 ## Game flow
 

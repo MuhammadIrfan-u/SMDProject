@@ -1,4 +1,5 @@
 // The whole game screen. It keeps the game state and lets the computer players move.
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +10,7 @@ import { firstFive, newGame } from '@/game/deal';
 import { canReveal, chooseTrump, revealRang } from '@/game/rang';
 import { finishTrick, legalCards, playCard } from '@/game/tricks';
 import { Card, PLAYER_NAMES } from '@/game/types';
+import { useGameRecorder } from '@/hooks/use-game-recorder';
 import BidButtons from './BidButtons';
 import { ORANGE, WHITE } from './colors';
 import GameButton from './GameButton';
@@ -18,8 +20,17 @@ import PlayerHand from './PlayerHand';
 import ResultCard from './ResultCard';
 import Table from './Table';
 
-export default function GameScreen() {
+type Props = { playerId: string; playerName: string };
+
+export default function GameScreen({ playerId, playerName }: Props) {
   const [game, setGame] = useState(newGame());
+  // saves this game's status, bids and result to the player's history in Firebase
+  const beginNewDeal = useGameRecorder(playerId, playerName, game);
+
+  function deal() {
+    beginNewDeal();
+    setGame(newGame());
+  }
 
   // The computer players move here, after a short pause.
   useEffect(() => {
@@ -65,7 +76,11 @@ export default function GameScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <Header onRestart={() => setGame(newGame())} />
+      <Header
+        playerName={playerName}
+        onRestart={deal}
+        onHistory={() => router.push({ pathname: '/history', params: { player: playerId } })}
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
         <InfoBar game={game} />
@@ -79,7 +94,7 @@ export default function GameScreen() {
         )}
         {choosingRang && <Text style={styles.turnText}>Tap one of your cards to place it face down. Its suit is the rang.</Text>}
         {showReveal && <GameButton text="Reveal the Rang" onPress={() => setGame(revealRang(game, 0))} />}
-        {game.phase === 'over' && <ResultCard game={game} onPlayAgain={() => setGame(newGame())} />}
+        {game.phase === 'over' && <ResultCard game={game} onPlayAgain={deal} />}
 
         <PlayerHand
           cards={myHand}
